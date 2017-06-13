@@ -1,0 +1,361 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "dnsPrefix": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 15,
+      "defaultValue": "testprod",
+      "metadata": {
+        "description": "The DNS prefix used for this public IP address. The first charecter must be a letter. It can only contain lowercase letters, numbers and hyphens."
+      }
+    },
+    "virtualNetworkName": {
+      "type": "string",
+      "minLength": 1,
+      "defaultValue": "VNET",
+      "metadata": {
+        "description": "Name of the virtual network"
+      }
+    },
+    "adminUsername": {
+      "type": "string",
+      "minLength": 1,
+      "metadata": {
+        "description": "Admin username"
+      }
+    },
+    "adminPassword": {
+      "type": "securestring",
+      "metadata": {
+        "description": "Admin password"
+      }
+    },
+    "installJumpBox": {
+      "type": "string",
+      "defaultValue": "Yes",
+      "allowedValues": [
+        "Yes",
+        "No"
+      ],
+      "metadata": {
+        "description": "Optionally add a Jump Box to the deployment."
+      }
+    },
+    "installSqlServer": {
+      "type": "string",
+      "defaultValue": "Yes",
+      "allowedValues": [
+        "Yes",
+        "No"
+      ],
+      "metadata": {
+        "description": "Optionally add SQL Server to the deployment."
+      }
+    },
+    "sqlMachineName": {
+      "type": "string",
+      "minLength": 1,
+      "defaultValue": "SQL01"
+    },
+    "sqlOffer": {
+      "type": "string",
+      "minLength": 1,
+      "defaultValue": "SQL2016SP1-WS2016",
+      "allowedValues": [
+        "SQL2016SP1-WS2016",
+        "SQL2014SP2-WS2012R2"
+      ],
+      "metadata": {
+        "description": "SQL Server Offer"
+      }
+    },
+    "sqlSKU": {
+      "type": "string",
+      "minLength": 1,
+      "defaultValue": "SQLDEV",
+      "allowedValues": [
+        "SQLDEV",
+        "Standard",
+        "Enterprise"
+      ],
+      "metadata": {
+        "description": "SQL Server SKU"
+      }
+    },
+    "sqlVmSize": {
+      "type": "string",
+      "minLength": 1,
+      "defaultValue": "Standard_DS2_v2_Promo",
+      "allowedValues": [
+        "Standard_DS1_v2",
+        "Standard_DS2_v2",
+        "Standard_DS3_v2",
+        "Standard_DS4_v2",
+        "Standard_DS11_v2",
+        "Standard_DS12_v2",
+        "Standard_DS13_v2",
+        "Standard_DS14_v2",
+        "Standard_DS2_v2_Promo",
+        "Standard_DS3_v2_Promo",
+        "Standard_DS4_v2_Promo",
+        "Standard_DS5_v2_Promo",
+        "Standard_DS11_v2_Promo",
+        "Standard_DS12_v2_Promo",
+        "Standard_DS13_v2_Promo",
+        "Standard_DS14_v2_Promo"
+      ],
+      "metadata": {
+        "description": "Size of the virtual machine, must be available in the virtual machine's location"
+      }
+    },
+    "sqlAutopatchingDayOfWeek": {
+      "type": "string",
+      "minLength": 1,
+      "defaultValue": "Sunday"
+    },
+    "sqlAutopatchingStartHour": {
+      "type": "string",
+      "minLength": 1,
+      "defaultValue": "2"
+    },
+    "sqlAutopatchingWindowDuration": {
+      "type": "string",
+      "minLength": 1,
+      "defaultValue": "60"
+    },
+    "sqlRServicesEnabled": {
+      "type": "string",
+      "minLength": 1,
+      "defaultValue": "false"
+    },
+    "installWebServers": {
+      "type": "string",
+      "defaultValue": "Yes",
+      "allowedValues": [
+        "Yes",
+        "No"
+      ],
+      "metadata": {
+        "description": "Optionally add Web Servers to the deployment."
+      }
+    },
+    "webServerImageSKU": {
+      "type": "string",
+      "defaultValue": "2012-R2-Datacenter",
+      "allowedValues": [
+        "2012-R2-Datacenter",
+        "2016-Datacenter-smalldisk"
+      ],
+      "metadata": {
+        "description": "The Windows version for the VM"
+      }
+    },
+    "webServerVmSize": {
+      "type": "string",
+      "minLength": 1,
+      "defaultValue": "Standard_D1_v2",
+      "allowedValues": [
+        "Standard_D1_v2",
+        "Standard_D2_v2",
+        "Standard_D3_v2",
+        "Standard_D4_v2",
+        "Standard_D11_v2",
+        "Standard_D12_v2",
+        "Standard_D13_v2",
+        "Standard_D14_v2",
+        "Standard_D2_v2_Promo",
+        "Standard_D3_v2_Promo",
+        "Standard_D4_v2_Promo",
+        "Standard_D5_v2_Promo",
+        "Standard_D11_v2_Promo",
+        "Standard_D12_v2_Promo",
+        "Standard_D13_v2_Promo",
+        "Standard_D14_v2_Promo"
+      ],
+      "metadata": {
+        "description": "Size of the virtual machine, must be available in the virtual machine's location"
+      }
+    },
+    "webServerInstances": {
+      "type": "int",
+      "minValue": 1,
+      "defaultValue": 2,
+      "metadata": {
+        "description": "Number of Web Server instances to be created behind internal load balancer control"
+      }
+    },
+    "_artifactsLocation": {
+      "type": "string"
+    },
+    "_artifactsLocationSasToken": {
+      "type": "securestring"
+    }
+  },
+  "variables": {
+    "virtualNetwork": {
+      "Name": "[parameters('virtualNetworkName')]",
+      "Prefix": "10.1.0.0/20",
+      "SubnetFrontEndName": "FrontEnd",
+      "SubnetFrontEndPrefix": "10.1.0.0/24",
+      "SubnetBackEndName": "BackEnd",
+      "SubnetBackendPrefix": "10.1.1.0/24"
+    },
+    "nestedTemplateFolder": "nestedtemplates",
+    "virtualnetworkTemplateFileName": "virtualnetwork.json",
+    "jumpboxTemplateFileName": "jumpbox.json",
+    "sqlserverTemplateFileName": "sqlserver.json",
+    "webserverTemplateFileName": "webserver.json"
+  },
+  "resources": [
+    {
+      "name": "jumpbox",
+      "type": "Microsoft.Resources/deployments",
+      "condition": "[equals(parameters('installJumpBox'),'Yes')]",
+      "apiVersion": "2016-09-01",
+      "dependsOn": [
+        "[resourceId('Microsoft.Resources/deployments', 'virtualnetwork')]"
+      ],
+      "properties": {
+        "mode": "Incremental",
+        "templateLink": {
+          "uri": "[concat(parameters('_artifactsLocation'), '/', variables('nestedTemplateFolder'), '/', variables('jumpboxTemplateFileName'), parameters('_artifactsLocationSasToken'))]",
+          "contentVersion": "1.0.0.0"
+        },
+        "parameters": {
+          "dnsPrefix": {
+            "value": "[parameters('dnsPrefix')]"
+          },
+          "virtualNetwork": {
+            "value": "[variables('virtualNetwork')]"
+          },
+          "adminUserName": {
+            "value": "[parameters('adminUserName')]"
+          },
+          "adminPassword": {
+            "value": "[parameters('adminPassword')]"
+          }
+        }
+      }
+    },
+    {
+      "name": "sqlserver",
+      "type": "Microsoft.Resources/deployments",
+      "condition": "[equals(parameters('installSqlServer'),'Yes')]",
+      "apiVersion": "2016-09-01",
+      "dependsOn": [
+        "[resourceId('Microsoft.Resources/deployments', 'virtualnetwork')]"
+      ],
+      "properties": {
+        "mode": "Incremental",
+        "templateLink": {
+          "uri": "[concat(parameters('_artifactsLocation'), '/', variables('nestedTemplateFolder'), '/', variables('sqlserverTemplateFileName'), parameters('_artifactsLocationSasToken'))]",
+          "contentVersion": "1.0.0.0"
+        },
+        "parameters": {
+          "dnsPrefix": {
+            "value": "[parameters('dnsPrefix')]"
+          },
+          "virtualNetwork": {
+            "value": "[variables('virtualNetwork')]"
+          },
+          "adminUserName": {
+            "value": "[parameters('adminUserName')]"
+          },
+          "adminPassword": {
+            "value": "[parameters('adminPassword')]"
+          },
+          "sqlMachineName": {
+            "value": "[parameters('sqlMachineName')]"
+          },
+          "sqlOffer": {
+            "value": "[parameters('sqlOffer')]"
+          },
+          "sqlSKU": {
+            "value": "[parameters('sqlSKU')]"
+          },
+          "sqlVmSize": {
+            "value": "[parameters('sqlVmSize')]"
+          },
+          "sqlAutopatchingDayOfWeek": {
+            "value": "[parameters('sqlAutopatchingDayOfWeek')]"
+          },
+          "sqlAutopatchingStartHour": {
+            "value": "[parameters('sqlAutopatchingStartHour')]"
+          },
+          "sqlAutopatchingWindowDuration": {
+            "value": "[parameters('sqlAutopatchingWindowDuration')]"
+          },
+          "sqlRServicesEnabled": {
+            "value": "[parameters('sqlRServicesEnabled')]"
+          }
+        }
+      }
+    },
+    {
+      "name": "virtualnetwork",
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2016-09-01",
+      "dependsOn": [],
+      "properties": {
+        "mode": "Incremental",
+        "templateLink": {
+          "uri": "[concat(parameters('_artifactsLocation'), '/', variables('nestedTemplateFolder'), '/', variables('virtualnetworkTemplateFileName'), parameters('_artifactsLocationSasToken'))]",
+          "contentVersion": "1.0.0.0"
+        },
+        "parameters": {
+          "virtualNetwork": {
+            "value": "[variables('virtualNetwork')]"
+          }
+        }
+      }
+    },
+    {
+      "name": "webserver",
+      "type": "Microsoft.Resources/deployments",
+      "condition": "[equals(parameters('installWebServers'),'Yes')]",
+      "apiVersion": "2016-09-01",
+      "dependsOn": [
+        "[resourceId('Microsoft.Resources/deployments', 'virtualnetwork')]"
+      ],
+      "properties": {
+        "mode": "Incremental",
+        "templateLink": {
+          "uri": "[concat(parameters('_artifactsLocation'), '/', variables('nestedTemplateFolder'), '/', variables('webserverTemplateFileName'), parameters('_artifactsLocationSasToken'))]",
+          "contentVersion": "1.0.0.0"
+        },
+        "parameters": {
+          "dnsPrefix": {
+            "value": "[parameters('dnsPrefix')]"
+          },
+          "virtualNetwork": {
+            "value": "[variables('virtualNetwork')]"
+          },
+          "adminUserName": {
+            "value": "[parameters('adminUserName')]"
+          },
+          "adminPassword": {
+            "value": "[parameters('adminPassword')]"
+          },
+          "webServerImageSKU": {
+            "value": "[parameters('webServerImageSKU')]"
+          },
+          "webServerVmSize": {
+            "value": "[parameters('webServerVmSize')]"
+          },
+          "webServerInstances": {
+            "value": "[parameters('webServerInstances')]"
+          },
+          "_artifactsLocation": {
+            "value": "[parameters('_artifactsLocation')]"
+          },
+          "_artifactsLocationSasToken": {
+            "value": "[parameters('_artifactsLocationSasToken')]"
+          }
+        }
+      }
+    }
+  ],
+  "outputs": {}
+}

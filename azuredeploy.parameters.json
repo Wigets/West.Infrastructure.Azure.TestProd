@@ -1,0 +1,27 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "adminUsername": {
+      "value": "west"
+    },
+    "adminPassword": {
+      "value": "Rambo4444!!!!"
+    },
+    "installSqlServer": {
+      "value": "No"
+    },
+    "installJumpBox": {
+      "value": "Yes"
+    },
+    "installWebServers": {
+      "value": "Yes"
+    },
+    "webServerImageSKU": {
+      "value": "2012-R2-Datacenter"
+    },
+    "webServerInstances": {
+      "value": 1
+    }
+  }
+}

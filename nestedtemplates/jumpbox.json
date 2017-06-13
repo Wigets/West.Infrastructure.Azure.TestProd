@@ -1,0 +1,173 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "dnsPrefix": {
+      "type": "string"
+    },
+    "virtualNetwork": {
+      "type": "object"
+    },
+    "adminUsername": {
+      "type": "string",
+      "minLength": 1,
+      "metadata": {
+        "description": "Admin username"
+      }
+    },
+    "adminPassword": {
+      "type": "securestring",
+      "metadata": {
+        "description": "Admin password"
+      }
+    }
+  },
+  "variables": {
+    "jumpBox": {
+      "Name": "JumpBox",
+      "SubnetRef": "[concat(resourceId('Microsoft.Network/virtualNetworks', parameters('virtualNetwork').Name), '/subnets/', parameters('virtualNetwork').SubnetFrontEndName)]"
+    },
+    "jumpBoxNicName": "[concat(variables('jumpBox').Name, '-NIC')]",
+    "jumpBoxNSGName": "[concat(variables('jumpBox').Name, '-NSG')]",
+    "jumpBoxIPName": "[concat(variables('jumpBox').Name, '-IP')]",
+    "jumpBoxIPDnsName": "[concat(parameters('dnsPrefix'), '-jumpbox-', uniqueString(resourceGroup().id))]"
+  },
+  "resources": [
+    {
+      "name": "[variables('jumpBoxNicName')]",
+      "type": "Microsoft.Network/networkInterfaces",
+      "location": "[resourceGroup().location]",
+      "apiVersion": "2016-03-30",
+      "dependsOn": [
+        "[resourceId('Microsoft.Network/publicIPAddresses', variables('jumpBoxIPName'))]",
+        "[resourceId('Microsoft.Network/networkSecurityGroups', variables('jumpBoxNSGName'))]"
+      ],
+      "tags": {
+        "displayName": "JumpBox Nic"
+      },
+      "properties": {
+        "ipConfigurations": [
+          {
+            "name": "ipconfig1",
+            "properties": {
+              "privateIPAllocationMethod": "Dynamic",
+              "subnet": {
+                "id": "[variables('jumpBox').SubnetRef]"
+              },
+              "publicIPAddress": {
+                "id": "[resourceId('Microsoft.Network/publicIPAddresses', variables('jumpBoxIPName'))]"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "[variables('jumpBox').Name]",
+      "type": "Microsoft.Compute/virtualMachines",
+      "location": "[resourceGroup().location]",
+      "apiVersion": "2016-04-30-preview",
+      "dependsOn": [
+        "[resourceId('Microsoft.Network/networkInterfaces', variables('jumpBoxNicName'))]"
+      ],
+      "tags": {
+        "displayName": "JumpBox"
+      },
+      "properties": {
+        "hardwareProfile": {
+          "vmSize": "Basic_A1"
+        },
+        "osProfile": {
+          "computerName": "[variables('jumpBox').Name]",
+          "adminUsername": "[parameters('AdminUsername')]",
+          "adminPassword": "[parameters('AdminPassword')]",
+          "windowsConfiguration": {
+            "provisionVmAgent": "true"
+          }
+        },
+        "storageProfile": {
+          "imageReference": {
+            "publisher": "MicrosoftWindowsServer",
+            "offer": "WindowsServer",
+            "sku": "2016-Datacenter-smalldisk",
+            "version": "latest"
+          },
+          "osDisk": {
+            "createOption": "FromImage",
+            "managedDisk": {
+              "storageAccountType": "Standard_LRS"
+            }
+          }
+        },
+        "networkProfile": {
+          "networkInterfaces": [
+            {
+              "id": "[resourceId('Microsoft.Network/networkInterfaces', variables('jumpBoxNicName'))]"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "[variables('jumpBoxNSGName')]",
+      "type": "Microsoft.Network/networkSecurityGroups",
+      "apiVersion": "2016-09-01",
+      "location": "[resourceGroup().location]",
+      "tags": {
+        "displayName": "JumpBox NSG"
+      },
+      "properties": {
+        "securityRules": [
+          {
+            "name": "West-RDP",
+            "properties": {
+              "priority": 1020,
+              "sourceAddressPrefix": "75.78.103.8",
+              "protocol": "Tcp",
+              "destinationPortRange": "3389",
+              "access": "Allow",
+              "direction": "Inbound",
+              "sourcePortRange": "*",
+              "destinationAddressPrefix": "*"
+            }
+          },
+          {
+            "name": "Intrafinity-RDP",
+            "properties": {
+              "priority": 1040,
+              "sourceAddressPrefix": "158.106.69.84",
+              "protocol": "Tcp",
+              "destinationPortRange": "3389",
+              "access": "Allow",
+              "direction": "Inbound",
+              "sourcePortRange": "*",
+              "destinationAddressPrefix": "*"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "[variables('jumpBoxIPName')]",
+      "type": "Microsoft.Network/publicIPAddresses",
+      "location": "[resourceGroup().location]",
+      "apiVersion": "2016-09-01",
+      "dependsOn": [],
+      "tags": {
+        "displayName": "JumpBox Public IP"
+      },
+      "properties": {
+        "publicIPAllocationMethod": "Dynamic",
+        "dnsSettings": {
+          "domainNameLabel": "[variables('jumpBoxIPDnsName')]"
+        }
+      }
+    }
+  ],
+  "outputs": {
+    //"jumpbox-pip": {
+    //  "type": "string",
+    //  "value": "[reference(resourceId('Microsoft.Network/publicIPAddresses', variables('jumpBoxIpName'))).ipAddress]"
+    //}
+  }
+}

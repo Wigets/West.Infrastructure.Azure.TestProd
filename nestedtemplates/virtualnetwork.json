@@ -1,0 +1,47 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "virtualNetwork": {
+      "type": "object",
+      "metadata": {
+        "description": "Name of the virtual network"
+      }
+    }
+  },
+  "variables": {},
+  "resources": [
+    {
+      "name": "[parameters('virtualNetwork').Name]",
+      "type": "Microsoft.Network/virtualNetworks",
+      "location": "[resourceGroup().location]",
+      "apiVersion": "2016-03-30",
+      "dependsOn": [],
+      "tags": {
+        "displayName": "Virtual Network"
+      },
+      "properties": {
+        "addressSpace": {
+          "addressPrefixes": [
+            "[parameters('virtualNetwork').Prefix]"
+          ]
+        },
+        "subnets": [
+          {
+            "name": "[parameters('virtualNetwork').SubnetFrontEndName]",
+            "properties": {
+              "addressPrefix": "[parameters('virtualNetwork').SubnetFrontEndPrefix]"
+            }
+          },
+          {
+            "name": "[parameters('virtualNetwork').SubnetBackEndName]",
+            "properties": {
+              "addressPrefix": "[parameters('virtualNetwork').SubnetBackEndPrefix]"
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "outputs": {}
+}
