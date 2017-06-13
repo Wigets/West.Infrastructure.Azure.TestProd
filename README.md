@@ -1,0 +1,1 @@
+# West.Infrastructure.Azure.TestProd
