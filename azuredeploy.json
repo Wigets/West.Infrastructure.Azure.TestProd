@@ -187,10 +187,12 @@
       }
     },
     "_artifactsLocation": {
-      "type": "string"
+      "type": "string",
+      "defaultValue": "//stagef2ed219ec53546d68cc.blob.core.windows.net/test"
     },
     "_artifactsLocationSasToken": {
-      "type": "securestring"
+      "type": "securestring",
+      "defaultValue": ""
     }
   },
   "variables": {
