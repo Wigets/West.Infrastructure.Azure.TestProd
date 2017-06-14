@@ -181,7 +181,7 @@
     "webServerInstances": {
       "type": "int",
       "minValue": 1,
-      "defaultValue": 2,
+      "defaultValue": 1,
       "metadata": {
         "description": "Number of Web Server instances to be created behind internal load balancer control"
       }
