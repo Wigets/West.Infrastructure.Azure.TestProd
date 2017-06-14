@@ -12,16 +12,22 @@
       "value": "No"
     },
     "installJumpBox": {
-      "value": "Yes"
+      "value": "No"
     },
     "installWebServers": {
-      "value": "No"
+      "value": "Yes"
     },
     "webServerImageSKU": {
       "value": "2012-R2-Datacenter"
     },
     "webServerInstances": {
       "value": 1
+    },
+    "installCachingServices": {
+      "value": "No"
+    },
+    "_artifactsLocation": {
+      "value": null
     }
   }
 }

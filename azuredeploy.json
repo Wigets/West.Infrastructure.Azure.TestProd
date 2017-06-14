@@ -186,6 +186,54 @@
         "description": "Number of Web Server instances to be created behind internal load balancer control"
       }
     },
+    "installCachingServices": {
+      "type": "string",
+      "defaultValue": "Yes",
+      "allowedValues": [
+        "Yes",
+        "No"
+      ],
+      "metadata": {
+        "description": "Optionally add Caching Services server to the deployment."
+      }
+    },
+    "cachingServicesServerImageSKU": {
+      "type": "string",
+      "defaultValue": "2012-R2-Datacenter",
+      "allowedValues": [
+        "2012-R2-Datacenter",
+        "2016-Datacenter-smalldisk"
+      ],
+      "metadata": {
+        "description": "The Windows version for the VM"
+      }
+    },
+    "cachingServicesServerVmSize": {
+      "type": "string",
+      "minLength": 1,
+      "defaultValue": "Standard_D1_v2",
+      "allowedValues": [
+        "Standard_D1_v2",
+        "Standard_D2_v2",
+        "Standard_D3_v2",
+        "Standard_D4_v2",
+        "Standard_D11_v2",
+        "Standard_D12_v2",
+        "Standard_D13_v2",
+        "Standard_D14_v2",
+        "Standard_D2_v2_Promo",
+        "Standard_D3_v2_Promo",
+        "Standard_D4_v2_Promo",
+        "Standard_D5_v2_Promo",
+        "Standard_D11_v2_Promo",
+        "Standard_D12_v2_Promo",
+        "Standard_D13_v2_Promo",
+        "Standard_D14_v2_Promo"
+      ],
+      "metadata": {
+        "description": "Size of the virtual machine, must be available in the virtual machine's location"
+      }
+    },
     "_artifactsLocation": {
       "type": "string",
       "defaultValue": "https://raw.githubusercontent.com/Wigets/West.Infrastructure.Azure.TestProd/master",
@@ -214,7 +262,8 @@
     "virtualnetworkTemplateFileName": "virtualnetwork.json",
     "jumpboxTemplateFileName": "jumpbox.json",
     "sqlserverTemplateFileName": "sqlserver.json",
-    "webserverTemplateFileName": "webserver.json"
+    "webserverTemplateFileName": "webserver.json",
+    "cachingservicesTemplateFileName": "cachingservices.json"
   },
   "resources": [
     {
@@ -354,6 +403,46 @@
           },
           "webServerInstances": {
             "value": "[parameters('webServerInstances')]"
+          },
+          "_artifactsLocation": {
+            "value": "[parameters('_artifactsLocation')]"
+          },
+          "_artifactsLocationSasToken": {
+            "value": "[parameters('_artifactsLocationSasToken')]"
+          }
+        }
+      }
+    },
+    {
+      "name": "cachingservices",
+      "type": "Microsoft.Resources/deployments",
+      "condition": "[equals(parameters('installCachingServices'),'Yes')]",
+      "apiVersion": "2016-09-01",
+      "dependsOn": [],
+      "properties": {
+        "mode": "Incremental",
+        "templateLink": {
+          "uri": "[concat(parameters('_artifactsLocation'), '/', variables('nestedTemplateFolder'), '/', variables('cachingservicesTemplateFileName'), parameters('_artifactsLocationSasToken'))]",
+          "contentVersion": "1.0.0.0"
+        },
+        "parameters": {
+          "dnsPrefix": {
+            "value": "[parameters('dnsPrefix')]"
+          },
+          "virtualNetwork": {
+            "value": "[variables('virtualNetwork')]"
+          },
+          "adminUserName": {
+            "value": "[parameters('adminUserName')]"
+          },
+          "adminPassword": {
+            "value": "[parameters('adminPassword')]"
+          },
+          "cachingServicesServerImageSKU": {
+            "value": "[parameters('cachingServicesServerImageSKU')]"
+          },
+          "cachingServicesServerVmSize": {
+            "value": "[parameters('cachingServicesServerVmSize')]"
           },
           "_artifactsLocation": {
             "value": "[parameters('_artifactsLocation')]"

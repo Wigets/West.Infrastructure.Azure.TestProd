@@ -37,6 +37,7 @@
     <Content Include="nestedtemplates\webserver.json" />
     <Content Include="DSC\webServerDSC.ps1" />
     <None Include="DSC\webServerDSC.zip" />
+    <Content Include="nestedtemplates\cachingservices.json" />
     <None Include="README.md" />
   </ItemGroup>
   <Target Name="GetReferenceAssemblyPaths" />

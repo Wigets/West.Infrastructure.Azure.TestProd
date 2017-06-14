@@ -1,0 +1,116 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "dnsPrefix": {
+      "type": "string"
+    },
+    "virtualNetwork": {
+      "type": "object"
+    },
+    "adminUsername": {
+      "type": "string"
+    },
+    "adminPassword": {
+      "type": "securestring"
+    },
+    "cachingServicesServerImageSKU": {
+      "type": "string"
+    },
+    "cachingServicesServerVmSize": {
+      "type": "string"
+    },
+    "_artifactsLocation": {
+      "type": "string",
+      "metadata": {
+        "description": "Auto-generated container in staging storage account to receive post-build staging folder upload"
+      }
+    },
+    "_artifactsLocationSasToken": {
+      "type": "securestring",
+      "metadata": {
+        "description": "Auto-generated token to access _artifactsLocation"
+      }
+    }
+  },
+  "variables": {
+    "cachingServices": {
+      "Name": "CachingServices",
+      "SubnetRef": "[concat(resourceId('Microsoft.Network/virtualNetworks', parameters('virtualNetwork').Name), '/subnets/', parameters('virtualNetwork').SubnetBackEndName)]"
+    },
+    "cachingServicesNicName": "[concat(variables('cachingServices').Name, '-NIC')]"
+  },
+  "resources": [
+    {
+      "name": "[variables('cachingServicesNicName')]",
+      "type": "Microsoft.Network/networkInterfaces",
+      "location": "[resourceGroup().location]",
+      "apiVersion": "2016-03-30",
+      "dependsOn": [
+      ],
+      "tags": {
+        "displayName": "Caching Services Nic"
+      },
+      "properties": {
+        "ipConfigurations": [
+          {
+            "name": "ipconfig1",
+            "properties": {
+              "privateIPAllocationMethod": "Dynamic",
+              "subnet": {
+                "id": "[variables('cachingServices').SubnetRef]"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "[variables('cachingServices').Name]",
+      "type": "Microsoft.Compute/virtualMachines",
+      "location": "[resourceGroup().location]",
+      "apiVersion": "2016-04-30-preview",
+      "dependsOn": [
+        "[resourceId('Microsoft.Network/networkInterfaces', variables('cachingServicesNicName'))]"
+      ],
+      "tags": {
+        "displayName": "Caching Services"
+      },
+      "properties": {
+        "hardwareProfile": {
+          "vmSize": "[parameters('cachingServicesServerVmSize')]"
+        },
+        "osProfile": {
+          "computerName": "[variables('cachingServices').Name]",
+          "adminUsername": "[parameters('AdminUsername')]",
+          "adminPassword": "[parameters('AdminPassword')]",
+          "windowsConfiguration": {
+            "provisionVmAgent": "true"
+          }
+        },
+        "storageProfile": {
+          "imageReference": {
+            "publisher": "MicrosoftWindowsServer",
+            "offer": "WindowsServer",
+            "sku": "[parameters('cachingServicesServerImageSKU')]",
+            "version": "latest"
+          },
+          "osDisk": {
+            "createOption": "FromImage",
+            "managedDisk": {
+              "storageAccountType": "Standard_LRS"
+            }
+          }
+        },
+        "networkProfile": {
+          "networkInterfaces": [
+            {
+              "id": "[resourceId('Microsoft.Network/networkInterfaces', variables('cachingServicesNicName'))]"
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "outputs": {}
+}
