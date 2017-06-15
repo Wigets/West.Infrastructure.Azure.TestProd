@@ -38,7 +38,9 @@
       "Name": "CachingServices",
       "SubnetRef": "[concat(resourceId('Microsoft.Network/virtualNetworks', parameters('virtualNetwork').Name), '/subnets/', parameters('virtualNetwork').SubnetBackEndName)]"
     },
-    "cachingServicesNicName": "[concat(variables('cachingServices').Name, '-NIC')]"
+    "cachingServicesNicName": "[concat(variables('cachingServices').Name, '-NIC')]",
+    "cachingServicesDSCArchiveFolder": "DSC",
+    "cachingServicesDSCArchiveFileName": "cachingServicesDSC.zip"
   },
   "resources": [
     {
@@ -109,7 +111,40 @@
             }
           ]
         }
-      }
+      },
+      "resources": [
+        {
+          "name": "Microsoft.Powershell.DSC",
+          "type": "extensions",
+          "location": "[resourceGroup().location]",
+          "apiVersion": "2016-03-30",
+          "dependsOn": [
+            "[resourceId('Microsoft.Compute/virtualMachines', variables('cachingServices').Name)]"
+          ],
+          "tags": {
+            "displayName": "cachingServicesDSC"
+          },
+          "properties": {
+            "publisher": "Microsoft.Powershell",
+            "type": "DSC",
+            "typeHandlerVersion": "2.9",
+            "autoUpgradeMinorVersion": true,
+            "settings": {
+              "configuration": {
+                "url": "[concat(parameters('_artifactsLocation'), '/', variables('cachingServicesDSCArchiveFolder'), '/', variables('cachingServicesDSCArchiveFileName'))]",
+                "script": "cachingServicesDSC.ps1",
+                "function": "Main"
+              },
+              "configurationArguments": {
+                "nodeName": "[variables('cachingServices').Name]"
+              }
+            },
+            "protectedSettings": {
+              "configurationUrlSasToken": "[parameters('_artifactsLocationSasToken')]"
+            }
+          }
+        }
+      ]
     }
   ],
   "outputs": {}

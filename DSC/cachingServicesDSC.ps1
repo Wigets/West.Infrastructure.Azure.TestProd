@@ -31,35 +31,7 @@ Node $nodeName
         Ensure               = 'Present'
         DependsOn            = '[cChocoInstaller]installChoco'
     }
-
-    cChocoPackageInstaller installNotepadPlusPlus
-    {
-        Name                 = 'notepadplusplus.install'
-        Ensure               = 'Present'
-        DependsOn            = '[cChocoInstaller]installChoco'
-    }
-
-    cChocoPackageInstaller installDotnetcoreWindowshosting
-    {
-        Name                 = 'dotnetcore-windowshosting'
-        Ensure               = 'Present'
-        DependsOn            = '[cChocoInstaller]installChoco', '[WindowsFeature]WebServerRole'
-    }
-
-    cChocoPackageInstaller installDotnetcoreRuntime
-    {
-        Name                 = 'dotnetcore-runtime'
-        Ensure               = 'Present'
-        DependsOn            = '[cChocoInstaller]installChoco'
-    }
-
-    cChocoPackageInstaller installNugetCommandline
-    {
-        Name                 = 'nuget.commandline'
-        Ensure               = 'Present'
-        DependsOn            = '[cChocoInstaller]installChoco'
-    }
-
+	
   	###########################################################################
 	# Install Windows Features
 	###########################################################################

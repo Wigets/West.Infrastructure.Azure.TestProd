@@ -12,7 +12,7 @@
       "value": "No"
     },
     "installJumpBox": {
-      "value": "No"
+      "value": "Yes"
     },
     "installWebServers": {
       "value": "Yes"
@@ -24,7 +24,7 @@
       "value": 1
     },
     "installCachingServices": {
-      "value": "No"
+      "value": "Yes"
     },
     "_artifactsLocation": {
       "value": null
